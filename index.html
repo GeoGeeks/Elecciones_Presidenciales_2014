@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width"/>
+<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0" />
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/arcGIS.js"></script>
+<link rel="stylesheet" href="css/Nueva carpeta/esri.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" type="text/css" href="Fuentes/fuentes.css" />
+<script language="javascript" type="text/javascript" src="js/jit.js"></script>
+<script language="javascript" type="text/javascript" src="js/torta.js"></script>
+<script>var dojoConfig = { parseOnLoad:true };</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-51277395-1', 'esri.co');
+  ga('send', 'pageview');
+
+</script>
+<style>
+html, .map.container {
+	padding: 0;
+	margin: 0;
+}
+
+</style>
+<script>
+	  var click=false;	
+      var map, dialog, depto,mapaBase, mapaDepto, mapaDatos;
+      require([
+        "esri/map", "esri/layers/FeatureLayer", "esri/tasks/query",
+		"esri/geometry/Extent", "esri/SpatialReference",
+        "esri/symbols/SimpleFillSymbol", "esri/symbols/SimpleLineSymbol", 
+        "esri/renderers/ClassBreaksRenderer",
+        "esri/renderers/SimpleRenderer", "esri/graphic", "esri/lang",
+        "esri/Color", "dojo/number", "dojo/dom-style", 
+        "dijit/TooltipDialog", "dijit/popup", "esri/layers/ArcGISDynamicMapServiceLayer",
+        "esri/layers/ArcGISTiledMapServiceLayer", "dojo/_base/array",
+        "dojo/domReady!"
+      ], function(
+        Map, FeatureLayer, Query, Extent, SpatialReference,
+        SimpleFillSymbol, SimpleLineSymbol,
+        ClassBreaksRenderer,
+        SimpleRenderer, Graphic, esriLang,
+        Color, number, domStyle, 
+        TooltipDialog, dijitPopup, ArcGISDynamicMapServiceLayer, Tiled, arrayUtils
+      ) {
+        map = new Map("mapDiv", {
+          center: [-80.541, 5.638],
+          zoom: 6,
+          slider: false
+        });
+        map.infoWindow.set("popupWindow", false);
+		map.setExtent(new esri.geometry.Extent(-113.594748,-10.581665,-54.268576,20.131362, new esri.SpatialReference({ wkid:4326 })));
+       	mapaBase = new Tiled("http://54.187.22.10:6080/arcgis/rest/services/Elecciones2014/Basemap/MapServer");
+        mapaDepto = new ArcGISDynamicMapServiceLayer("http://54.187.22.10:6080/arcgis/rest/services/Resultados_presidenciales/MapServer");
+        var statesUrl = "http://54.187.22.10:6080/arcgis/rest/services/Resultados_presidenciales/MapServer/0";
+		 mapaDatos = new FeatureLayer(statesUrl,{
+          id: "presidenciales.DBO.DEPARTAMENTO",
+          opacity: 0,
+          outFields: ["*"],
+		    infoTemplate:"infoTemplate"
+        });
+        //Agregar al mapa
+        map.addLayer(mapaBase);
+        map.addLayer(mapaDatos);
+        map.addLayer(mapaDepto);
+		map.infoWindow.resize(100000,10000);
+		
+		mapaDatos.on("click", function(evt){
+		  if(depto!= esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.DEPARTAMENTO.NOMBRE}")){
+			if(click==true){
+				document.getElementById("infovis1").removeChild(document.getElementById("infovis1-canvaswidget"));
+			}else
+			{
+				click=true;
+			}
+			document.getElementById("ventana_emergente").style.display="block";
+			
+      var candidato1 = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND1}");
+      var candidato2 = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND2}");
+      var candidato3 = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND3}");
+      var candidato4 = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND4}");
+      var candidato5 = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND5}");
+      var candidato6 = new String(esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND6}"));
+	    document.getElementById('infovis').style.width = '320px';
+      document.getElementById('infovis').style.height = '320px';
+      init(candidato1,candidato2,candidato3,candidato4,candidato5,candidato6);
+      document.getElementById('infovis1').style.width = '160px';
+      document.getElementById('infovis1').style.height = '160px';
+      document.getElementById('infovis').style.width = '160px';
+      document.getElementById('infovis').style.height = '160px';
+	////////////////////////////////////////////////////////////////
+      document.getElementById('DeptoCandidato1').innerHTML = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND1}%");
+      document.getElementById('DeptoCandidato2').innerHTML = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND2}%");
+      document.getElementById('DeptoCandidato3').innerHTML = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND3}%");
+      document.getElementById('DeptoCandidato4').innerHTML = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND4}%");
+      document.getElementById('DeptoCandidato5').innerHTML = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND5}%");
+      document.getElementById('DeptoCandidato6').innerHTML = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.%VW_DEPARTAMENTAL.PORC_VOTOS_CAND6}%");
+	  /////////////////////////////////////////////////////////////////
+	  depto = esriLang.substitute(evt.graphic.attributes,"${presidenciales.DBO.DEPARTAMENTO.NOMBRE}");
+			}else
+			{
+				ocult();
+				document.getElementById("ventana_emergente").style.display="none";
+				depto = "";
+			}
+      });
+		function ocult(){
+			map.graphics.clear();
+			mapaDatos.refresh();
+		}
+$(document).ready(function() {
+    document.getElementById('mapDiv').style.display = "none";
+    refrescarElementos();
+    timeRefrescar();
+  });
+        function timeRefrescar() {
+          var t=setTimeout(function (){
+              mapaDatos.refresh();
+              mapaDepto.refresh();
+              refrescarElementos();
+              //organizarCandidato();
+              timeRefrescar();
+          },20000);
+        }
+function refrescarElementos() {
+          var mapaDatosNac1 = new FeatureLayer("http://54.187.22.10:6080/arcgis/rest/services/NACIONAL_CAND/MapServer/1",{
+            id: "presidenciales.DBO.%VW_NACIONAL_CAND",
+            opacity: 0,
+            outFields: ["*"]
+          });
+          var mapaDatosNac2 = new FeatureLayer("http://54.187.22.10:6080/arcgis/rest/services/NACIONAL_CAND/MapServer/2",{
+            id: "presidenciales.DBO.%VW_NACIONAL",
+            opacity: 0,
+            outFields: ["*"]
+          });
+          mapaDatosNac2.on("load", function(){
+            //alert("Cargó datos nacional 2");
+            var query = new Query();
+            query.where = "1 = 1";
+            query.outFields = ["*"];
+            mapaDatosNac2.queryFeatures(query, function (featureSet) {
+              var data = arrayUtils.map(featureSet.features, function (entry, i) {
+                  if(boletin!=entry.attributes.NUMERO_BOLETIN){
+                    document.getElementById('boletin').innerHTML="N° "+entry.attributes.NUMERO_BOLETIN;
+					document.getElementById('boletin1').innerHTML="N° "+entry.attributes.NUMERO_BOLETIN;
+                    document.getElementById('contados').innerHTML=conComas(parseInt(entry.attributes.TOTAL_SUFRA))+" contados";
+					document.getElementById('contadosA').innerHTML=conComas(parseInt(entry.attributes.TOTAL_SUFRA))+" contados";
+                    document.getElementById('posibles').innerHTML=conComas(parseInt(entry.attributes.POTENCIAL_SUFRA))+" posibles";
+					document.getElementById('posiblesA').innerHTML=conComas(parseInt(entry.attributes.POTENCIAL_SUFRA))+" posibles";
+                  document.getElementById('mesas_contadas').innerHTML=conComas(parseInt(entry.attributes.MESAS_INF))+" contados";
+				  document.getElementById('mesas_contadasA').innerHTML=conComas(parseInt(entry.attributes.MESAS_INF))+" contados";
+                    document.getElementById('mesas_posibles').innerHTML=conComas(parseInt(entry.attributes.MESAS_INSTALADAS))+" posibles";
+					 document.getElementById('mesas_posiblesA').innerHTML=conComas(parseInt(entry.attributes.MESAS_INSTALADAS))+" posibles";
+					document.getElementById('porcVotos').innerHTML=parseFloat( entry.attributes.PORC_SUFRA)+"%";
+					document.getElementById('porcVotosA').innerHTML=parseFloat( entry.attributes.PORC_SUFRA)+"%";
+					document.getElementById('PorcMesas').innerHTML=parseFloat( entry.attributes.PORC_INFO)+"%";
+					document.getElementById('PorcMesasA').innerHTML=parseFloat( entry.attributes.PORC_INFO)+"%";
+		document.getElementById("barraPorc").style.width= (parseFloat( entry.attributes.PORC_SUFRA))*1+"%";
+		document.getElementById("barraPorcA").style.width= (parseFloat( entry.attributes.PORC_SUFRA))*1+"%";
+		document.getElementById("barrAPorc").style.width= (parseFloat( entry.attributes.PORC_INFO))*1+"%";
+		document.getElementById("barrAPorcA").style.width= (parseFloat( entry.attributes.PORC_INFO))*1+"%";
+                  }
+              });
+            });
+          });
+          mapaDatosNac1.on("load", function(){
+            //alert("Cargó datos nacional 1");
+            var query1 = new Query();
+            query1.where = "1 = 1";
+            query1.outFields = ["*"];
+            mapaDatosNac1.queryFeatures(query1, function (featureSet) {
+              //alert("cambio");
+              var data2 = arrayUtils.map(featureSet.features, function (entry, i) {
+				      var x;
+            if(entry.attributes.PORC_CANDIDATO1 >= 93.00){
+              document.getElementById('GraficaAmarillo').style.height=entry.attributes.PORC_CANDIDATO1+"%";
+              document.getElementById('TextoAmarillo').style.bottom="93%";
+              document.getElementById('TextoAmarillo').innerHTML = "93%";
+              document.getElementById('GraficaAmarillo_inf').style.height=entry.attributes.PORC_CANDIDATO1+"%";
+              document.getElementById('TextoAmarillo_inf').style.bottom="93%";
+              document.getElementById('TextoAmarillo_inf').innerHTML = "93%";
+            }else{
+              document.getElementById('GraficaAmarillo').style.height=entry.attributes.PORC_CANDIDATO1+"%";
+              document.getElementById('TextoAmarillo').style.bottom=entry.attributes.PORC_CANDIDATO1+"%";
+              document.getElementById('TextoAmarillo').innerHTML = entry.attributes.PORC_CANDIDATO1*1+"%";
+              document.getElementById('GraficaAmarillo_inf').style.height=entry.attributes.PORC_CANDIDATO1+"%";
+              document.getElementById('TextoAmarillo_inf').style.bottom=entry.attributes.PORC_CANDIDATO1+"%";
+              document.getElementById('TextoAmarillo_inf').innerHTML = entry.attributes.PORC_CANDIDATO1*1+"%";    
+            }
+
+            if( entry.attributes.PORC_CANDIDATO2 >= 93.00){                 
+            document.getElementById('GraficaAzul1').style.height=entry.attributes.PORC_CANDIDATO2+"%";
+            document.getElementById('TextoAzul1').style.bottom="93%";
+            document.getElementById('TextoAzul1').innerHTML = "93%";
+            document.getElementById('GraficaAzul1_inf').style.height=entry.attributes.PORC_CANDIDATO2+"%";
+            document.getElementById('TextoAzul1_inf').style.bottom="93%";
+            document.getElementById('TextoAzul1_inf').innerHTML = "93%";
+            }else{
+              document.getElementById('GraficaAzul1').style.height=entry.attributes.PORC_CANDIDATO2+"%";
+              document.getElementById('TextoAzul1').style.bottom=entry.attributes.PORC_CANDIDATO2+"%";
+              document.getElementById('TextoAzul1').innerHTML = entry.attributes.PORC_CANDIDATO2*1+ "%"; 
+              document.getElementById('GraficaAzul1_inf').style.height=entry.attributes.PORC_CANDIDATO2+"%";
+              document.getElementById('TextoAzul1_inf').style.bottom=entry.attributes.PORC_CANDIDATO2+"%";
+              document.getElementById('TextoAzul1_inf').innerHTML = entry.attributes.PORC_CANDIDATO2*1+ "%";  
+            }
+
+            if(entry.attributes.PORC_CANDIDATO3 >= 93.00){             
+              document.getElementById('GraficaAnaranjado').style.height=entry.attributes.PORC_CANDIDATO3+"%";
+              document.getElementById('TextoAnaranjado').style.bottom="93%";
+              document.getElementById('TextoAnaranjado').innerHTML = "93%";
+              document.getElementById('GraficaAnaranjado_inf').style.height=entry.attributes.PORC_CANDIDATO3+"%";
+              document.getElementById('TextoAnaranjado_inf').style.bottom="93%";
+              document.getElementById('TextoAnaranjado_inf').innerHTML = "93%";
+            }else{
+              document.getElementById('GraficaAnaranjado').style.height=entry.attributes.PORC_CANDIDATO3+"%";
+              document.getElementById('TextoAnaranjado').style.bottom=entry.attributes.PORC_CANDIDATO3+"%";
+              document.getElementById('TextoAnaranjado').innerHTML = entry.attributes.PORC_CANDIDATO3*1+ "%";
+              document.getElementById('GraficaAnaranjado_inf').style.height=entry.attributes.PORC_CANDIDATO3+"%";
+              document.getElementById('TextoAnaranjado_inf').style.bottom=entry.attributes.PORC_CANDIDATO3+"%";
+              document.getElementById('TextoAnaranjado_inf').innerHTML = entry.attributes.PORC_CANDIDATO3*1+ "%";  
+            }
+
+            if( entry.attributes.PORC_CANDIDATO4 >= 93.00){                 
+              document.getElementById('GraficaVerde').style.height=entry.attributes.PORC_CANDIDATO4+"%";
+              document.getElementById('TextoVerde').style.bottom="93%";
+              document.getElementById('TextoVerde').innerHTML = "93%";
+              document.getElementById('GraficaVerde_inf').style.height=entry.attributes.PORC_CANDIDATO4+"%";
+              document.getElementById('TextoVerde_inf').style.bottom="93%";
+              document.getElementById('TextoVerde_inf').innerHTML = "93%";
+            }else{
+              document.getElementById('GraficaVerde').style.height=entry.attributes.PORC_CANDIDATO4+"%";
+              document.getElementById('TextoVerde').style.bottom=entry.attributes.PORC_CANDIDATO4+"%";
+              document.getElementById('TextoVerde').innerHTML = entry.attributes.PORC_CANDIDATO4*1+ "%";
+              document.getElementById('GraficaVerde_inf').style.height=entry.attributes.PORC_CANDIDATO4+"%";
+              document.getElementById('TextoVerde_inf').style.bottom=entry.attributes.PORC_CANDIDATO4+"%";
+              document.getElementById('TextoVerde_inf').innerHTML = entry.attributes.PORC_CANDIDATO4*1+ "%";
+            }
+
+            if( entry.attributes.PORC_CANDIDATO5 >= 93.00){                 
+              document.getElementById('GraficaAzulC').style.height=entry.attributes.PORC_CANDIDATO5+"%";
+              document.getElementById('TextoAzulC').style.bottom= "93%";
+              document.getElementById('TextoAzulC').innerHTML = "93%";
+              document.getElementById('GraficaAzulC_inf').style.height=entry.attributes.PORC_CANDIDATO5+"%";
+              document.getElementById('TextoAzulC_inf').style.bottom= "93%";
+              document.getElementById('TextoAzulC_inf').innerHTML = "93%";
+            }
+            else{
+              document.getElementById('GraficaAzulC').style.height=entry.attributes.PORC_CANDIDATO5+"%";
+              document.getElementById('TextoAzulC').style.bottom=entry.attributes.PORC_CANDIDATO5+"%";
+              document.getElementById('TextoAzulC').innerHTML = entry.attributes.PORC_CANDIDATO5*1+ "%";
+               document.getElementById('GraficaAzulC_inf').style.height=entry.attributes.PORC_CANDIDATO5+"%";
+              document.getElementById('TextoAzulC_inf').style.bottom=entry.attributes.PORC_CANDIDATO5+"%";
+              document.getElementById('TextoAzulC_inf').innerHTML = entry.attributes.PORC_CANDIDATO5*1+ "%"; 
+            }
+
+            if( entry.attributes.PORC_CANDIDATO6 >= 93.00){                 
+              document.getElementById('GraficaBlanco').style.height=entry.attributes.PORC_CANDIDATO6+"%";
+              document.getElementById('TextoBlanco').style.bottom="93%";
+              document.getElementById('TextoBlanco').innerHTML = "93%";
+              document.getElementById('GraficaBlanco_inf').style.height=entry.attributes.PORC_CANDIDATO6+"%";
+              document.getElementById('TextoBlanco_inf').style.bottom="93%";
+              document.getElementById('TextoBlanco_inf').innerHTML = "93%";         
+            }else{
+              document.getElementById('GraficaBlanco').style.height=entry.attributes.PORC_CANDIDATO6+"%";
+              document.getElementById('TextoBlanco').style.bottom=entry.attributes.PORC_CANDIDATO6+"%";
+              document.getElementById('TextoBlanco').innerHTML = entry.attributes.PORC_CANDIDATO6*1+ "%";
+              document.getElementById('GraficaBlanco_inf').style.height=entry.attributes.PORC_CANDIDATO6+"%";
+              document.getElementById('TextoBlanco_inf').style.bottom=entry.attributes.PORC_CANDIDATO6+"%";
+              document.getElementById('TextoBlanco_inf').innerHTML = entry.attributes.PORC_CANDIDATO6*1+ "%"; 
+            }
+
+		  
+                document.getElementById('Candidato1').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO1));
+                document.getElementById('Candidato2').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO2));
+                document.getElementById('Candidato3').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO3));
+                document.getElementById('Candidato4').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO4));
+                document.getElementById('Candidato5').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO5));
+                document.getElementById('Candidato6').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO6));
+                document.getElementById('candidato1').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO1));
+                document.getElementById('candidato2').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO2));
+                document.getElementById('candidato3').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO3));
+                document.getElementById('candidato4').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO4));
+                document.getElementById('candidato5').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO5));
+                document.getElementById('candidato6').innerHTML=conComas(parseInt(entry.attributes.VOTOS_CANDIDATO6));
+				        organizarCandidato();
+              });
+            });
+          });
+        }
+  });
+
+function replaceAll( text, busca, reemplaza ){
+    while (text.toString().indexOf(busca) != -1)
+      text = text.toString().replace(busca,reemplaza);
+    return text;
+}
+
+function organizarCandidato(){
+        var repetidos = false;
+        var datosCandidatos = {};
+        var votos = [replaceAll(document.getElementById('Candidato1').innerHTML,".",""),replaceAll(document.getElementById('Candidato2').innerHTML,".",""),replaceAll(document.getElementById('Candidato3').innerHTML,".",""), replaceAll(document.getElementById('Candidato4').innerHTML,".",""), replaceAll(document.getElementById('Candidato5').innerHTML,".",""), replaceAll(document.getElementById('Candidato6').innerHTML,".","")];
+        datosCandidatos[votos[0]] = 'datosCandidato1';
+        datosCandidatos[votos[1]] = 'datosCandidato2';
+        datosCandidatos[votos[2]] = 'datosCandidato3';
+        datosCandidatos[votos[3]] = 'datosCandidato4';
+        datosCandidatos[votos[4]] = 'datosCandidato5';
+        datosCandidatos[votos[5]] = 'datosCandidato6';
+        votos.sort(function(a,b){return b-a});
+        var uno = document.getElementById(datosCandidatos[votos[0]]);
+        var dos = document.getElementById(datosCandidatos[votos[1]]);
+        var tres = document.getElementById(datosCandidatos[votos[2]]);
+        var cuatro = document.getElementById(datosCandidatos[votos[3]]);
+        var cinco = document.getElementById(datosCandidatos[votos[4]]);
+        var seis = document.getElementById(datosCandidatos[votos[5]]);
+        var uno2 = document.getElementById(datosCandidatos[votos[0]].replace("C","c"));
+        var dos2 = document.getElementById(datosCandidatos[votos[1]].replace("C","c"));
+        var tres2 = document.getElementById(datosCandidatos[votos[2]].replace("C","c"));
+        var cuatro2 = document.getElementById(datosCandidatos[votos[3]].replace("C","c"));
+        var cinco2 = document.getElementById(datosCandidatos[votos[4]].replace("C","c"));
+        var seis2 = document.getElementById(datosCandidatos[votos[5]].replace("C","c"));
+
+        document.getElementById('derecha').removeChild(uno);
+        document.getElementById('derecha').removeChild(dos);
+        document.getElementById('derecha').removeChild(tres);
+        document.getElementById('derecha').removeChild(cuatro);
+        document.getElementById('derecha').removeChild(cinco);
+        document.getElementById('derecha').removeChild(seis);
+        
+        document.getElementById('ventana').removeChild(uno2);
+        document.getElementById('ventana').removeChild(dos2);
+        document.getElementById('ventana').removeChild(tres2);
+        document.getElementById('ventana').removeChild(cuatro2);
+        document.getElementById('ventana').removeChild(cinco2);
+        document.getElementById('ventana').removeChild(seis2);
+
+        var referencia = document.getElementById('desplegable');
+        var referencia2 = document.getElementById('desplegable_inf');
+  
+        document.getElementById('derecha').insertBefore(uno,referencia);
+        document.getElementById('derecha').insertBefore(dos,referencia);
+        document.getElementById('derecha').insertBefore(tres,referencia);
+        document.getElementById('derecha').insertBefore(cuatro,referencia);
+        document.getElementById('derecha').insertBefore(cinco,referencia);
+        document.getElementById('derecha').insertBefore(seis,referencia);
+
+        document.getElementById('ventana').insertBefore(uno2,referencia2);
+        document.getElementById('ventana').insertBefore(dos2,referencia2);
+        document.getElementById('ventana').insertBefore(tres2,referencia2);
+        document.getElementById('ventana').insertBefore(cuatro2,referencia2);
+        document.getElementById('ventana').insertBefore(cinco2,referencia2);
+        document.getElementById('ventana').insertBefore(seis2,referencia2);
+}
+</script>
+<script>
+function conComas(valor) {
+    var nums = new Array();
+    var simb = "."; 
+    valor = valor.toString();
+    valor = valor.replace(/\D/g, "");
+    nums = valor.split("");
+    var long = nums.length - 1;
+    var patron = 3;
+    var prox = 2;
+    var res = "";
+ 
+    while (long > prox) {
+        nums.splice((long - prox),0,simb); 
+        prox += patron; 
+    }
+ 
+    for (var i = 0; i <= nums.length-1; i++) {
+        res += nums[i]; 
+    }
+ 
+    return res;
+}
+
+
+</script>
+<script type="text/javascript">
+function tag(id) {
+ return document.getElementById(id);
+}
+function ocultar(que,valor,id) {
+ 
+   tag("ocultar").disabled = true;
+   tag("MostrarMapa").disabled = false;
+   ocultando(que,valor,id);
+ }
+function ocultando(que,valor,id){
+	if(id == "botones"){
+		document.getElementById('ocultar').innerHTML='<a id="ocultar"href="javascript:mostrar(\'azul\','+valor+',\''+id+'\')"><img src="images/mas-blanco.png"></a>';
+		document.getElementById('MostrarMapa').innerHTML='<a id="MostrarMapa"href="javascript:cambio(\''+valor+'\')"><img src="images/mostrar-mapa-blanco.png"></a>';
+	}
+	
+	if(id == "botones1"){
+		document.getElementById('ocultar1').innerHTML='<a id="ocultar1" href="javascript:mostrar(\'cambioA\','+valor+',\''+id+'\')"><img src="images/mas-blanco.png"></a>';
+		document.getElementById('MostrarMapa1').innerHTML='<a id="MostrarMapa1"href="javascript:cambio(\''+valor+'\')"><img src="images/mostrar-mapa-blanco.png"></a>';
+	}
+		
+	if(valor=="2")
+    document.getElementById(id).style.background='rgb(51,51,51)';
+  else
+    document.getElementById(id).style.background='rgb(57,57,57)';
+
+	tope = parseInt(tag(que).style.top);
+ 	tag(que).style.top = tope+2 + "%";
+	 if (tope >= 100) {
+	 }
+	 
+	 else
+	  setTimeout("ocultando('" + que + "','"+valor+"','"+id+"')", 0.3);
+}
+	
+function mostrar(que,valor,id) {
+	
+   tag("ocultar").disabled = false;
+   tag("MostrarMapa").disabled = true;
+   mostrando(que,valor,id);
+ }
+
+function mostrando(que,valor,id){
+	
+	if(id == "botones"){
+		document.getElementById('ocultar').innerHTML='<a id="ocultar" href="javascript:ocultar(\'azul\','+valor+',\''+id+'\')"><img src="images/menos-datos.png"></a>';
+		document.getElementById('MostrarMapa').innerHTML='<a id="MostrarMapa" href="javascript:cambio(\''+valor+'\')"><img src="images/mostrar-mapa-gris.png"></a>';
+	}
+	if(id=="botones1"){
+		document.getElementById('ocultar1').innerHTML='<a id="ocultar1" href="javascript:ocultar(\'cambioA\','+valor+',\''+id+'\')"><img src="images/menos-datos.png"></a>';
+		document.getElementById('MostrarMapa1').innerHTML='<a id="MostrarMapa1" href="javascript:cambio(\''+valor+'\')"><img src="images/mostrar-mapa-gris.png"></a>';
+	}
+
+	document.getElementById(id).style.background='white';
+	  				
+  tope = parseInt(tag(que).style.top);
+  if(tope-3>0)
+  	tag(que).style.top = tope-2 + "%";
+  else
+  	tag(que).style.top ="0px";
+  if (tope <= 0) {
+  }
+  else
+    setTimeout("mostrando('" + que + "', '"+valor+"','"+id+"')", 0.3);
+  }
+  </script>
+<script type="text/javascript">
+ function cambio(id){
+	 if (id == "1"){
+			document.getElementById("contenidos").style.display="none";
+			document.getElementById("mapDiv").style.display="block";
+			document.getElementById("ventana_emergente").style.display="none";
+		} else if(id == "2"){
+			
+			document.getElementById("Candidato1").style.display="inline";
+			document.getElementById("Candidato2").style.display="inline";
+			document.getElementById("Candidato3").style.display="inline";
+			document.getElementById("Candidato4").style.display="inline";
+			document.getElementById("Candidato5").style.display="inline";
+			document.getElementById("Candidato6").style.display="inline";
+			document.getElementById("contenidos").style.display="block";
+			document.getElementById("mapDiv").style.display="none";
+		}
+}
+
+var negritab=0;
+var negritam=0;
+var negritaq=0;
+var negritaca=0;
+var negritaco=1;
+
+function cambioBogota(){
+	if((typeof document.getElementById('colombia'))!="undefined"){
+		ocult1();
+		document.getElementById("ventana_emergente").style.display="none";
+	}
+  if (negritab==0) {
+	  var Ebogota = new esri.geometry.Extent(-76.629085,3.260710,-72.921200,5.205369, new esri.SpatialReference({ wkid:4326 }));
+	  map.setExtent(Ebogota);
+  document.getElementById('bogota').innerHTML='<img src="images/bogota-neg.png">';
+  document.getElementById('medellin').innerHTML='<img src="images/medellin.png">';
+  document.getElementById('cali').innerHTML='<img src="images/cali.png">';
+  document.getElementById('quilla').innerHTML='<img src="images/quilla.png">';
+  document.getElementById('colombia').innerHTML='<img src="images/colombia.png">';
+  negritab =1;
+  negritam=0;
+  negritaq=0;
+  negritaca=0;
+  negritaco=0;
+
+  }else{
+    document.getElementById('bogota').innerHTML='<img src="images/bogota.png">';
+  negritab =0;
+  }
+}
+
+function cambioMedellin(){
+	if((typeof document.getElementById('colombia'))!="undefined"){
+		ocult1();
+		document.getElementById("ventana_emergente").style.display="none";
+	}
+  if (negritam==0) {
+	   var extent = new esri.geometry.Extent(-78.021602,5.063120,-74.313717,7.002299, new esri.SpatialReference({ wkid:4326 }));
+  map.setExtent(extent);
+  document.getElementById('medellin').innerHTML='<img src="images/medellin-neg.png">';
+  document.getElementById('bogota').innerHTML='<img src="images/bogota.png">';
+  document.getElementById('cali').innerHTML='<img src="images/cali.png">';
+  document.getElementById('quilla').innerHTML='<img src="images/quilla.png">';
+  document.getElementById('colombia').innerHTML='<img src="images/colombia.png">';
+  
+  
+  negritam =1;
+  negritab=0;
+  negritaq=0;
+  negritaca=0;
+  negritaco=0;
+
+  }else{
+    document.getElementById('medellin').innerHTML='<img src="images/medellin.png">';
+  negritam =0;
+  }
+  map.graphics.clear();
+}
+
+function cambioCali(){
+	if((typeof document.getElementById('colombia'))!="undefined"){
+		ocult1();
+		document.getElementById("ventana_emergente").style.display="none";
+	}
+  if (negritaca==0) {
+	  var Ecali = new esri.geometry.Extent(-78.971335,2.164460,-75.263449,4.111515, new esri.SpatialReference({ wkid:4326 }));
+	  map.setExtent(Ecali);
+  document.getElementById('cali').innerHTML='<img src="images/cali-neg.png">';
+  document.getElementById('bogota').innerHTML='<img src="images/bogota.png">';
+  document.getElementById('medellin').innerHTML='<img src="images/medellin.png">';
+  document.getElementById('quilla').innerHTML='<img src="images/quilla.png">';
+  document.getElementById('colombia').innerHTML='<img src="images/colombia.png">';
+  negritaca =1;
+  negritab=0;
+  negritam=0;
+  negritaq=0;
+  negritaco=0;
+
+  }else{
+    document.getElementById('cali').innerHTML='<img src="images/cali.png">';
+  negritaca =0;
+  }
+  map.graphics.clear();
+  
+			/*mapaDatos.refresh();
+			mapaDepto.refresh();*/
+}
+
+function cambioQuilla(){
+	if((typeof document.getElementById('colombia'))!="undefined"){
+		ocult1();
+		document.getElementById("ventana_emergente").style.display="none";
+	}
+  if (negritaq==0) {
+	  var Bquilla = new esri.geometry.Extent(-76.260923,10.248436,-74.406980,11.206421, new esri.SpatialReference({ wkid:4326 }));
+	  map.setExtent(Bquilla);
+    document.getElementById('bogota').innerHTML='<img src="images/bogota.png">';
+  document.getElementById('medellin').innerHTML='<img src="images/medellin.png">';
+  document.getElementById('cali').innerHTML='<img src="images/cali.png">';
+  document.getElementById('quilla').innerHTML='<img src="images/quilla-neg.png">';
+  document.getElementById('colombia').innerHTML='<img src="images/colombia.png">';
+  negritaq =1;
+  negritab=0;
+  negritam=0;
+  negritaca=0;
+  negritaco=0;
+
+  }else{
+    document.getElementById('quilla').innerHTML='<img src="images/quilla.png">';
+  negritaq =0;
+  }
+
+  map.graphics.clear();
+
+}
+
+function cambioColombia(){
+	if((typeof document.getElementById('colombia'))!="undefined"){
+		ocult1();
+		document.getElementById("ventana_emergente").style.display="none";
+	}
+		
+  if (negritaco==0) {
+	var Ecolombia = new esri.geometry.Extent(-113.594748,-10.581665,-54.268576,20.131362, new esri.SpatialReference({ wkid:4326 }));
+	map.setExtent(Ecolombia);
+  document.getElementById('bogota').innerHTML='<img src="images/bogota.png">';
+  document.getElementById('medellin').innerHTML='<img src="images/medellin.png">';
+  document.getElementById('cali').innerHTML='<img src="images/cali.png">';
+  document.getElementById('quilla').innerHTML='<img src="images/quilla.png">';
+  document.getElementById('colombia').innerHTML='<img src="images/colombia-neg.png">';
+	  
+  negritaco =1;
+  negritab=0;
+  negritam=0;
+  negritaq=0;
+  negritaca=0;
+
+  }else{
+    document.getElementById('colombia').innerHTML='<img src="images/colombia.png">';
+  negritaco =0;
+  
+  }
+
+  map.graphics.clear();
+
+}
+function ocult1(){
+			map.graphics.clear();
+		}
+</script>
+</head>
+
+<body style="margin:0;">
+<div id="contenedor" style="width:100%; height:648px; display:block;">
+  <div id="contenidos" style="display:block; width:100%; height:100%;">
+    <div id="izquierda" style="width:18.6%; height:100%;">
+      <div style="width:80%; height: 13.33%; margin-left:20%;margin-top:20%; font-family:Avenir_light; font-size:3.5vw; color:white;">Bolet&iacute;n</div>
+      <div id="boletin" style="margin-left:20%; height: 8.66%; width: 80%; color:white; font-family:Avenir; font-size:3.5vw; font-weight: bold;"></div>
+      <div style=" margin-left:17%; width:75%;  border-top-style: ridge; border-top-width: 1px; font-family:Avenir_light;  color:white;"></div>
+      <div style="width:100%; height:49%;"></div>
+      <div>
+      <a target="blank" href="http://www.esri.co"><img style="width:90%; height:8%; margin-left:10%; max-height:100%; max-width:85%;" src="images/esri blanco-34.png"></a>
+      </div>
+    </div>
+    <div id="centro" style="width:53.45%; height:100%; position:relative;">
+      <div id="centro_sup" style="width:100%; height: 81.5%;">
+        <div id="centro_izq" style="width:8.69%; height:100%; float: left;">
+          <div style="float:left;"><img src="images/escala-21.png" style=" max-height:100%; max-width:100%;"></div>
+        </div>
+        <div id="centro_der" style="width:91.31%; height:100%; float: left;">
+
+            <div id="blanco" style="width: 16.6666%; height: 100%; float:right; position:relative;">
+              <div id="TextoBlanco" style="width: 100%; height: 6%; font-family:Avenir; font-size:1.6vw; font-weight: bold;  position:absolute; bottom:0%; margin-left: 10%; color: white;">00.00%</div>
+              <div id="GraficaBlanco" style="width: 100%; height: 0%; background:#ffffff; position:absolute; bottom:0%;"></div>
+            </div>
+            <div id="azulC" style="width: 16.6666%; height: 100%; float:right; position:relative;">
+              <div id="TextoAzulC" style="width: 100%; height: 6%; font-family:Avenir; font-size:1.6vw; font-weight: bold; position:absolute; bottom:0%; margin-left: 10%; color: white;">00.00%</div>
+              <div id="GraficaAzulC" style="width: 100%; height: 0%; background:#4cb8ed; position:absolute; bottom:0%;"></div>
+            </div>
+            <div id="verde" style="width: 16.6666%; height: 100%; float:right; position:relative;">
+              <div id="TextoVerde" style="width: 100%; height: 6%; font-family:Avenir; font-size:1.6vw; font-weight: bold; position:absolute; bottom:0%; margin-left: 10%; color: white;">00.00%</div>
+              <div id="GraficaVerde" style="width: 100%; height: 0%; background:#28883d; position:absolute; bottom:0%;"></div>
+            </div>
+            <div id="anaranjado" style="width: 16.6666%; height: 100%; float:right; position:relative;">
+              <div id="TextoAnaranjado" style="width: 100%; height: 6%; font-family:Avenir; font-size:1.6vw; font-weight: bold; position:absolute; bottom:0%; margin-left: 10%; color: white;">00.00%</div>
+              <div id="GraficaAnaranjado" style="width: 100%; height: 0%; background:#fd7e14; position:absolute; bottom:0%;"></div>
+            </div>
+            <div id="azul1" style="width: 16.6666%; height: 100%; float:right; position:relative;">
+              <div id="TextoAzul1" style="width: 100%; height: 6%; font-family:Avenir; font-size:1.6vw; font-weight: bold; position:absolute; bottom:0%; margin-left: 10%; color: white;">00.00%</div>
+              <div id="GraficaAzul1" style="width: 100%; height: 0%; background:#2170d2; position:absolute; bottom:0%;"></div>
+            </div>
+            <div id="amarillo" style="width: 16.6666%; height: 100%; float:right; position:relative;">
+              <div id="TextoAmarillo" style="width: 100%; height: 6%; font-family:Avenir; font-size:1.6vw; font-weight: bold; position:absolute; bottom:0%; margin-left: 10%; color: white;">00.00%</div>
+              <div id="GraficaAmarillo" style="width: 100%; height: 0%; background:#f5c410; position:absolute; bottom:0%;"></div>
+            </div>
+        </div>
+      </div>
+      <div id="centro_inf" style="width:100%; height: 18.5%; position:absolute; top:75.6%;">
+        <div style="width:91.31%; height: 100%;margin-top: -0.5%; float: right;"><img style="max-height: 100%; max-width: 100%; float:right;" src="images/Intento-76.png" ></div>
+      </div>
+    </div>
+      
+    <div id="derecha" style="width:27.95%; height:100%; position:relative;">
+      <!--<img src="images/numero-1.png" style="position:absolute; left: 873px; top: 50px; max-width:100%; max-height:100%;">
+      <img src="images/numero-2.png" style="position:absolute; left: 873px; top: 135px; max-width:100%; max-height:100%;">
+      <img src="images/numero-3.png" style="position:absolute; left: 873px; top: 222px; max-width:100%; max-height:100%;">
+      <img src="images/numero-4.png" style="position:absolute; left: 873px; top: 306px; max-width:100%; max-height:100%;">
+      <img src="images/numero-5.png" style="position:absolute; left: 873px; top: 392.5px; max-width:100%; max-height:100%;">
+      <img src="images/numero-6.png" style=" position:absolute; left: 873px; top: 479px; max-width:100%; max-height:100%;">-->
+      <div id="datosCandidato1" style="position:relative; width:100%; height:13.3333%; text-align: center;">
+        <h3 id="Candidato1" style="position:absolute; top: 35.5% !important; left: 43% !important; color:black; font-size:125%; font-family:Avenir_light">0</h3>
+        <img src="images/López-45.png" style="max-width:100%; max-height:100%;margin-top: 3%;"></div>
+      <div id="datosCandidato2" style="position:relative; width:100%; height:13.3333%; text-align: center;">
+        <h3 id="Candidato2" style="position:absolute; top: 35.5% !important; left: 43% !important; color:white; font-size:125%; font-family:Avenir_light">0</h3>
+        <img src="images/Ramírez-40.png" style="max-width:100%; max-height:100%; margin-top: 3%;"></div>
+      <div id="datosCandidato3" style="position:relative; width:100%; height:13.3333%; text-align: center;">
+        <h3 id="Candidato3" style="position:absolute; top: 35.5% !important; left: 43% !important; color:white; font-size:125%; font-family:Avenir_light">0</h3>
+        <img src="images/Santos-39.png" style="max-width:100%; max-height:100%; margin-top: 3%;"></div>
+      <div id="datosCandidato4" style="position:relative; width:100%; height:13.3333%; text-align: center;">
+        <h3 id="Candidato4" style="position:absolute; top: 35.5% !important; left: 43% !important; color:white; font-size:125%; font-family:Avenir_light">0</h3>
+        <img src="images/Peñalosa-41.png" style="max-width:100%; max-height:100%; margin-top: 3%;"></div>
+      <div id="datosCandidato5" style="position:relative; width:100%; height:13.3333%; text-align: center;">
+        <h3 id="Candidato5" style="position:absolute; top: 35.5% !important; left: 43% !important; color:white; font-size:125%; font-family:Avenir_light">0</h3>
+        <img src="images/Zuluaga-42.png" style="max-width:100%; max-height:100%; margin-top: 3%;"></div>
+      <div  id="datosCandidato6" style="position:relative; width:100%; height:13.3333%; text-align: center;">
+        <h3 id="Candidato6" style="position:absolute; top: 35.5% !important; left: 43% !important; color:#000; font-size:125%; font-family:Avenir_light">0</h3>
+        <img src="images/Blanco-44.png" style="max-width:100%; max-height:100%; margin-top: 3%;"></div>
+
+          <div id="desplegable" style=" position:absolute; width: 100%;height: 64%; top:27%">
+            <div id="contenedor1" style="position: relative; height: 100%; width: 100%; overflow: hidden">
+              <div id="azul" style="width: 100%; height: 100%; background-color: white; position: absolute; top: 100%; left: 0; color:black; ">
+                <h2 style="color:#333333; margin-left:5%; font-family:Avenir;">VOTOS</h2>
+                <div id='contados' style="color:#333333;margin-left:5%; font-family:Avenir; font-size:1.6vw;"></div>
+                <div id='posibles' style="color:#333333;margin-left:5%; border-top-style: ridge; border-top-width: 5px; font-family:Avenir; width:55%; font-size:1.6vw;"></div>
+                <div id="barra1" style="width:60%; margin-left:5%;float:left; margin-top:2%; height:6%; background-color:#CCC;">
+                  <div id="barraPorc" style="width:60%; float:left;  height:100%; background-color:#333333;"></div>
+                </div>
+                <div id='porcVotos' style="color:#39391B; float:left; margin-top:3%; font-family:Avenir;"></div>
+                <br>
+                <h2 style="color:#333333; font-family:Avenir;margin-left:5%; ">MESAS</h2>
+                <div id='mesas_contadas' style="color:#333333;margin-left:5%; font-family:Avenir; font-size:1.6vw;"></div>
+                <div id='mesas_posibles' style="color:#333333;margin-left:5%; border-top-style: ridge; border-top-width: 5px; font-family:Avenir; width:60%; font-size:1.6vw;"></div>
+                <div id="barra2" style="width:60%; margin-left:5%;float:left; margin-top:2%; height:6%; background-color:#CCC;">
+                  <div id="barrAPorc" style="width:60%; float:left;  height:100%; background-color:#333333;"></div>
+                </div>
+                <div id='PorcMesas' style="color:#39391B; float:left; margin-top:3%; font-family:Avenir;"></div>
+              </div>
+            </div>
+          </div>
+          <div id="botones" style="width:100%; height:3%; text-align: center;top:91%; position: absolute;" > <a  id="ocultar" href="javascript:mostrar('azul',1,'botones')"><img src="images/mas-blanco.png"></a> <a  id="MostrarMapa" href="javascript:cambio('1')"><img src="images/mostrar-mapa-blanco.png"></a> </div>
+    </div>
+  </div>
+  
+  <!-- -------------------capa inferior------------------------------------------------------------------------------ --> 
+  
+  <div id="mapDiv" style=" display:block; position:relative; height:100%; width: 100%; ">
+    <div id="capitales" style="width:50%; height:6%; margin-left:49.5%; background-color:white; position:absolute; z-index:4; margin-top:0.01%; text-align:center" > <a id="colombia"  href="javascript:cambioColombia();"><img style="margin-top:2%;" src="images/colombia-neg.png"></a> <img src="images/punto.png"> <a id="bogota" href="javascript:cambioBogota();"><img src="images/bogota.png"></a> <img src="images/punto.png"> <a id="cali" href="javascript:cambioCali();"><img  src="images/cali.png"></a> <img src="images/punto.png"> <a id="medellin" href="javascript:cambioMedellin();"><img src="images/medellin.png"></a> <img src="images/punto.png"> <a id="quilla" href="javascript:cambioQuilla();"><img  src="images/quilla.png"></a> </div>
+    <div style="width:512px; height:10px; float:right; position: absolute; background-color:;"></div>
+    <div id = "ventana_emergente" style=" display:none; position:absolute; z-index:3; width: 29.78%; height:31.69%; right: 0%; bottom:11%">
+      <div id="infovis" style=" width:160px; height:160px; margin:auto; overflow:hidden;bottom: 16%; right: 127px;z-index: 4; position:absolute;"></div>
+      <img src="images/Cuadro estadística-56.png" style="float: right;">
+      <h3 id="DeptoCandidato1" style="color:#F5C410;position:absolute; z-index:3; width:auto; bottom: 72%; right:45px; font-size:120%; font-family:Avenir">30.25%</h3>
+      <h3 id="DeptoCandidato2" style="color:#2170D2; position:absolute; z-index:3; width:auto; bottom: 58%; right:45px; font-size:120%; font-family:Avenir">30.14%</h3>
+      <h3 id="DeptoCandidato3" style="color:#FD7E14; position:absolute; z-index:3; width:auto; bottom: 44%; right:45px; font-size:120%; font-family:Avenir">30.54%</h3>
+      <h3 id="DeptoCandidato4" style="color:#28883D; position:absolute; z-index:3; width:auto; bottom: 30%; right:45px; font-size:120%; font-family:Avenir">30.45%</h3>
+      <h3 id="DeptoCandidato5" style="color:#4CB8ED; position:absolute; z-index:3; width:auto; bottom: 16%; right:45px; font-size:120%; font-family:Avenir">30.45%</h3>
+      <h3 id="DeptoCandidato6" style="color:#333333; position:absolute; z-index:3; width:auto; bottom: 2%; right:45px; font-size:120%; font-family:Avenir">30.55%</h3>
+      <h3 id="referencia"></h3>
+    </div>
+    <div id="contenidoH" style="width: 50%; height: 100%; position: absolute; z-index:2">
+      <div id="ventanaIzquierda" style="float:left; width: 50%; height: 100%; float: left; background-color:rgb(35,35,35);">
+        <div id="boletin_inf" style="width: 100%; height: 25%;">
+          <div id="Nboletin"  style="width: 43%; margin-left: 15%; margin-top: 10%; font-family: Avenir_light; border-bottom-style: ridge; border-bottom-width: 1px; font-size: 3.4vw; text-align: left; color: white;">Bolet&iacute;n</div>
+          <div id="boletin1" style="width: 38%; color: white; margin-left: 15%; font-family: Avenir; font-size: 3.5vw; font-weight: bold; border-bottom-style: ridge; border-bottom-width: 1px; text-align: right;"></div>
+        </div>
+        <div id="barrasInferiores" style="width: 100%; height: 60%;">
+          <div id="barras_inf" style="width:99.99%; height:100%; float: left;margin-bottom: -1%;">
+
+            <div id="blanco_inf" style="width: 16.83%; height: 100%; float:right; position:relative;">
+              <div id="TextoBlanco_inf" style="width: 100%; height: 6%; font-family:Avenir; font-size:1vw; font-weight: bold;  position:absolute; bottom:0%; margin-left: 8%; color: white;">00.00%</div>
+              <div id="GraficaBlanco_inf" style="width: 100%; height: 0%; background:#ffffff; position:absolute; bottom:0%;"></div>
+            </div>
+            <div id="azulC_inf" style="width: 16.4%; height: 100%; float:right; position:relative;">
+              <div id="TextoAzulC_inf" style="width: 100%; height: 6%; font-family:Avenir; font-size:1vw; font-weight: bold; position:absolute; bottom:0%; margin-left: 8%; color: white;">00.00%</div>
+              <div id="GraficaAzulC_inf" style="width: 100%; height: 0%; background:#4cb8ed; position:absolute; bottom:0%;"></div>
+            </div>
+            <div id="verde_inf" style="width: 16.6666%; height: 100%; float:right; position:relative;">
+              <div id="TextoVerde_inf" style="width: 100%; height: 6%; font-family:Avenir; font-size:1vw; font-weight: bold; position:absolute; bottom:0%; margin-left: 8%; color: white;">00.00%</div>
+              <div id="GraficaVerde_inf" style="width: 100%; height: 0%; background:#28883d; position:absolute; bottom:0%;"></div>
+            </div>
+            <div id="anaranjado_inf" style="width: 16.6%; height: 100%; float:right; position:relative;">
+              <div id="TextoAnaranjado_inf" style="width: 100%; height: 6%; font-family:Avenir; font-size:1vw; font-weight: bold; position:absolute; bottom:0%; margin-left: 8%; color: white;">00.00%</div>
+              <div id="GraficaAnaranjado_inf" style="width: 100%; height: 0%; background:#fd7e14; position:absolute; bottom:0%;"></div>
+            </div>
+            <div id="azul1_inf" style="width: 16.6666%; height: 100%; float:right; position:relative;">
+              <div id="TextoAzul1_inf" style="width: 100%; height: 6%; font-family:Avenir; font-size:1vw; font-weight: bold; position:absolute; bottom:0%; margin-left: 8%; color: white;">00.00%</div>
+              <div id="GraficaAzul1_inf" style="width: 100%; height: 0%; background:#2170d2; position:absolute; bottom:0%;"></div>
+            </div>
+            <div id="amarillo_inf" style="width: 16.6666%; height: 100%; float:right; position:relative;">
+              <div id="TextoAmarillo_inf" style="width: 100%; height: 6%; font-family:Avenir; font-size:1vw; font-weight: bold; position:absolute; bottom:0%; margin-left: 8%; color: white;">00.00%</div>
+              <div id="GraficaAmarillo_inf" style="width: 100%; height: 0%; background:#f5c410; position:absolute; bottom:0%;"></div>
+            </div>
+        </div>
+          <div style="width:100%; height:100%;"> <img style="max-height:100%; max-width:100%;" src="images/Partidos.png" ></div>
+        </div>
+      </div>
+      <div id="ventana" style="width:49%; height:100%; float:left; background-color:rgb(51,51,51); position:relative;overflow:hidden; top:0; left: 0;">
+      <div style="width:100%; height:5%;"></div>
+        <div id="datoscandidato1" style="margin-right:1%; width:100%; height: 11%; position:relative; margin-top:5%;">
+          <h3 id="candidato1" style="position: absolute; top: 32%; left: 30%; color: black; font-size: 1.5vw; font-family: Avenir_light;">0</h3>
+          <img src="images/López 2-51.png" style="margin-left:14%; max-width:100%; max-height:100%;"></div>
+
+        <div id="datoscandidato2" style="margin-right:1%; width:100%; height: 11%; position:relative; margin-top:5%;" >
+          <h3 id="candidato2" style="position: absolute; top: 32%; left: 30%; color: white; font-size: 1.5vw; font-family: Avenir_light;">0</h3>
+          <img src="images/Ramírez 2-46.png" style="margin-left:14%; max-width:100%; max-height:100%;"></div>
+
+        <div id="datoscandidato3" style="margin-right:1%; width:100%; height: 11%; position:relative; margin-top:5%;" >
+          <h3 id="candidato3" style="position: absolute; top: 32%; left: 30%; color: white; font-size: 1.5vw; font-family: Avenir_light;">0</h3>
+          <img src="images/Santos 2-45.png" style="margin-left:14%; max-width:100%; max-height:100%;"></div>
+
+        <div id="datoscandidato4" style="margin-right:1%; width:100%; height: 11%; position:relative; margin-top:5%;" >
+          <h3 id="candidato4" style="position: absolute; top: 32%; left: 30%; color: white; font-size: 1.5vw; font-family: Avenir_light;">0</h3>
+          <img src="images/Peñalosa 2-47.png" style="margin-left:14%; max-width:100%; max-height:100%;"></div>
+
+        <div id="datoscandidato5" style="margin-right:1%; width:100%; height: 11%; position:relative; margin-top:5%;" >
+          <h3 id="candidato5" style="position: absolute; top: 32%; left: 30%; color: white; font-size: 1.5vw; font-family: Avenir_light;">0</h3>
+          <img src="images/Zuluaga 2-48.png" style="margin-left:14%; max-width:100%; max-height:100%;"></div>
+
+        <div id="datoscandidato6" style="margin-right:1%; width:100%; height: 11%; position:relative; margin-top:5%;" >
+          <h3 id="candidato6" style="position: absolute; top: 32%; left: 30%; color: black; font-size: 1.5vw; font-family: Avenir_light;">0</h3>
+          <img src="images/Blanco 2-50.png" style="margin-left:14%; max-width:100%; max-height:100%;"></div>
+          <div id="desplegable_inf" style="bottom: 2%; position: absolute; width: 100%;">
+            <div id="desplegable2" style="margin-top:-110%; " >
+            <div id="contenedorG" style="position: relative; height: 390px; width: 100%; overflow: hidden">
+              <div id="cambioA" style="width: 100%; height: 100%; background-color: white; position: absolute; top: 390px; left: 0; color:black; ">
+                <h2 style="color:#333333; margin-left:5%; font-family:Avenir;">VOTOS</h2>
+                <div id='contadosA' style="color:#333333;margin-left:5%; font-family:Avenir; font-size:1.6vw;"></div>
+                <div id='posiblesA' style="color:#333333;margin-left:5%; border-top-style: ridge; border-top-width: 5px; font-family:Avenir; width:55%; font-size:1.6vw;"></div>
+                <div id="barra1A" style="width:60%; margin-left:5%;float:left; margin-top:2%; height:6%; background-color:#CCC;">
+                  <div id="barraPorcA" style="width:60%; float:left;  height:100%; background-color:#333333;"></div>
+                </div>
+                <div id='porcVotosA' style="color:#333333; float:left; margin-top:3%; font-family:Avenir;"></div>
+                <br>
+                <h2 style="color:black; font-family:Avenir;margin-left:5%; ">MESAS</h2>
+                <div id='mesas_contadasA' style="color:#333333;margin-left:5%; font-family:Avenir; font-size:1.6vw;"></div>
+                <div id='mesas_posiblesA' style="color:#333333;margin-left:5%; border-top-style: ridge; border-top-width: 5px; font-family:Avenir; width:60%; font-size:1.6vw;"></div>
+                <div id="barra2A" style="width:60%; margin-left:5%;float:left; margin-top:2%; height:6%; background-color:#CCC;">
+                  <div id="barrAPorcA" style="width:60%; float:left;  height:100%; background-color:#333333;"></div>
+                </div>
+                <div id='PorcMesasA' style="color:#333333; float:left; margin-top:3%; font-family:Avenir;"></div>
+              </div>
+            </div>
+          </div>
+          <div  id="botones1" style="position:relative;"> <a  style="margin-left:23%;" id="ocultar1" href="javascript:mostrar('cambioA',2,'botones1')"><img src="images/mas-blanco.png"></a> <a id="MostrarMapa1" href="javascript:cambio('2')"><img src="images/menos-mapa-blanco.png"></a> </div>
+        </div>
+        </div>
+    </div>
+  </div>
+  <!--</div>--> 
+</div>
+</body>
+</html>

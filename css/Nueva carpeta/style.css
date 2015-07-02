@@ -1,0 +1,78 @@
+/*------------------------------
+INICIO
+------------------------------*/
+/* Reset */
+* {
+	margin: 0;
+	padding: 0;
+}
+
+/*Muestra los elementos HTML5 como block*/
+article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section {
+	display: block;
+}
+
+/*img {
+	border: 0;
+}*/
+
+body {
+	font: 72.5%/1.2 'Avenir LT W01 35 Light', Arial, Helvetica, sans-serif;
+	background: #FFF;
+	display: block;
+	min-width: 900px;
+}
+
+h1 {
+	font-size:24px;
+	padding: 8px 0;
+}
+
+h2 {
+	font-size:14px;
+	padding: 6px 0;
+}
+
+h3 {
+	font-size: 12px;
+	padding: 4px 0;
+}
+
+p {
+	font-size: 12px;
+	padding-bottom: 8px;
+}
+
+article{
+	opacity: 0.9;
+}
+
+/*---- PARTE 2 ----*/
+#infoSecundaria{
+	color: #7C5C5C;
+	background: rgb(224,224,226);
+	width: 100%;
+	height: 100%;
+	min-width: 900px;
+	font-family: 'Avenir LT W01 35 Light', Arial, Helvetica, sans-serif;
+}
+	#infoSecundaria div {
+		display: table;
+		/*padding: 20px;*/
+		width: 95%;
+		height: 640px;
+		margin: 0 auto;
+	}
+	
+	#infoSecundaria article {
+		display: table-cell;
+		/*padding: 20px;*/
+		width: 35%;
+	}
+	
+	#infoSecundaria h2{
+		font-size: 26px;
+		font-weight: normal;
+		padding: 10px 0;
+	}
+	

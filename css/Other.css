@@ -1,0 +1,10 @@
+#right-container {
+    display:none;
+}
+#infovis {
+    position:relative;
+    width:320px;
+    height:320px;
+    margin:auto;
+    overflow:hidden;
+}

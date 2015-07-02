@@ -1,0 +1,54 @@
+	#infovis {
+	    width:320px;
+	    height:320px;
+	    margin:auto;
+	    overflow:hidden;
+	}
+
+	#contenidos {
+	  display: table-row;
+
+	}
+	#centro, #izquierda, #derecha {
+	  float:left;
+	 
+	}
+	#centro {
+	  width: 55.81%;
+	  height:100%;
+	}
+	#izquierda{
+		
+	  width: 15.87%;
+	  height:100%;
+	}
+	#derecha{
+	  width: 28.32%;
+	  height:100%;	
+	}
+	#izquierda, #centro{
+		background: rgb(35,35,35);
+	}
+	#derecha{
+		background: rgb(57,57,57);
+	}
+
+	#izquierda h1 {
+	font-size:34px;
+	margin-left: 10%;
+	margin-top: 20%;
+	}
+
+	h2 {
+		font-size:24px;
+		margin-top: 10%;
+		margin-left: 10%;
+	}
+
+	h3 {
+		font-size: 20px;
+		margin-left: 10%;
+	}
+	p{
+		margin-top: 0%;
+	}

@@ -1,0 +1,15 @@
+@charset "utf-8";
+@font-face {
+	
+font-family: "Avenir";
+src: url(aebl.ttf);
+
+}
+
+@font-face {
+	
+font-family: "Avenir_light";
+src: url(ael.ttf);
+
+}
+
